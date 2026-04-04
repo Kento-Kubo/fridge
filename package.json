@@ -1,0 +1,15 @@
+{
+  "name": "fridge-inventory",
+  "private": true,
+  "workspaces": [
+    "apps/mobile",
+    "packages/shared"
+  ],
+  "engines": {
+    "node": ">=20.18.0"
+  },
+  "scripts": {
+    "mobile": "npm run start -w mobile",
+    "build:shared": "npm run build -w @fridge-inventory/shared"
+  }
+}
