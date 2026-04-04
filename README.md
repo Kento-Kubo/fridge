@@ -1,4 +1,4 @@
-# 冷蔵庫在庫アプリ（モバイル）
+# fridge（冷蔵庫在庫アプリ・モバイル）
 
 家族向けの在庫管理。MVP は手入力。将来的にドア連動の映像収集と画像認識を追加する想定。
 
@@ -21,7 +21,8 @@
 リポジトリルートで依存関係を入れてから起動します。
 
 ```bash
-cd /path/to/fridge-inventory
+git clone https://github.com/Kento-Kubo/fridge.git
+cd fridge
 npm install
 npm run build:shared
 npm run mobile
