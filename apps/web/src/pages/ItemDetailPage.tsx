@@ -12,20 +12,34 @@ import "../App.css";
 import "./ItemDetailPage.css";
 
 type FormDefaults = {
+  category: string;
+  imageUrl: string;
   name: string;
   quantity: string;
+  quantityCaption: string;
   expiresAt: string;
   note: string;
 };
 
 function emptyDefaults(): FormDefaults {
-  return { name: "", quantity: "1", expiresAt: "", note: "" };
+  return {
+    category: "",
+    imageUrl: "",
+    name: "",
+    quantity: "1",
+    quantityCaption: "",
+    expiresAt: "",
+    note: "",
+  };
 }
 
 function defaultsFromItem(item: InventoryItem): FormDefaults {
   return {
+    category: item.category ?? "",
+    imageUrl: item.imageUrl ?? "",
     name: item.name,
     quantity: String(item.quantity),
+    quantityCaption: item.quantityCaption ?? "",
     expiresAt: item.expiresAt?.slice(0, 10) ?? "",
     note: item.note ?? "",
   };
@@ -45,8 +59,13 @@ function ItemDetailForm({
   const navigate = useNavigate();
   const { refresh, setError, error } = useInventory();
 
+  const [category, setCategory] = useState(defaults.category);
+  const [imageUrl, setImageUrl] = useState(defaults.imageUrl);
   const [name, setName] = useState(defaults.name);
   const [quantity, setQuantity] = useState(defaults.quantity);
+  const [quantityCaption, setQuantityCaption] = useState(
+    defaults.quantityCaption
+  );
   const [expiresAt, setExpiresAt] = useState(defaults.expiresAt);
   const [note, setNote] = useState(defaults.note);
 
@@ -65,8 +84,11 @@ function ItemDetailForm({
       id: isNew ? undefined : itemId,
       householdId: existing?.householdId ?? DEFAULT_HOUSEHOLD_ID,
       locationId: existing?.locationId ?? LOCATION_FRIDGE,
+      category: category.trim() || undefined,
+      imageUrl: imageUrl.trim() || undefined,
       name: name.trim(),
       quantity: qty,
+      quantityCaption: quantityCaption.trim() || undefined,
       expiresAt: expiresAt || undefined,
       note: note.trim() || undefined,
       source: "manual",
@@ -106,9 +128,17 @@ function ItemDetailForm({
         {!isNew && existing ? (
           <div className="detail-summary card page-pad-block">
             <p className="detail-summary__label">プレビュー</p>
+            <p className="detail-summary__category">
+              {existing.category?.trim()
+                ? existing.category.trim()
+                : "未分類"}
+            </p>
             <p className="detail-summary__name">{existing.name}</p>
             <p className="detail-summary__meta">
-              数量 ×{existing.quantity} ・ 期限{" "}
+              {existing.quantityCaption?.trim()
+                ? existing.quantityCaption.trim()
+                : `数量 ×${existing.quantity}`}
+              {" ・ 期限 "}
               {formatDateJa(existing.expiresAt)}
             </p>
           </div>
@@ -116,6 +146,27 @@ function ItemDetailForm({
 
         <section className="card page-pad-block">
           <form className="form" onSubmit={onSubmit}>
+            <label className="field">
+              <span className="label">カテゴリ（任意）</span>
+              <input
+                className="input"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="例：野菜、飲料"
+                autoComplete="off"
+              />
+            </label>
+            <label className="field">
+              <span className="label">画像 URL（任意）</span>
+              <input
+                className="input"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://…"
+                inputMode="url"
+                autoComplete="off"
+              />
+            </label>
             <label className="field">
               <span className="label">名前</span>
               <input
@@ -133,6 +184,16 @@ function ItemDetailForm({
                 inputMode="decimal"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
+              />
+            </label>
+            <label className="field">
+              <span className="label">量の表示（任意・定性）</span>
+              <input
+                className="input"
+                value={quantityCaption}
+                onChange={(e) => setQuantityCaption(e.target.value)}
+                placeholder="例：残りちょっと（未入力なら ×数量 を表示）"
+                autoComplete="off"
               />
             </label>
             <label className="field">

@@ -37,7 +37,9 @@ npm run web
 
 ### ログイン（パスワード）
 
-- 本番ビルドでは `apps/web/.env` などに `VITE_APP_PASSWORD` を設定してください（例は `apps/web/.env.example`）。
+- 本番ビルドでは `VITE_APP_PASSWORD` をビルド時に渡す必要があります（Vite が静的に埋め込みます）。
+  - **Vercel**: リポジトリの `vercel.json` の `build.env` で設定済みの例あり（初期値 `prod`）。強い秘密に変える場合は Vercel ダッシュボードの Environment Variables に切り替え、`vercel.json` の平文は削除してください。
+  - **ローカル本番ビルド**: `apps/web/.env.production`（gitignore 対象）や `VITE_APP_PASSWORD=… npm run web:build` など（例は `apps/web/.env.example`）。
 - **開発モード**（`npm run web`）で `VITE_APP_PASSWORD` が未設定のときは、パスワード **`dev`** でログインできます。
 - 認証状態は **タブを閉じるまで** `sessionStorage` に保持されます（端末ロック程度では維持、ブラウザを閉じると再ログイン）。
 

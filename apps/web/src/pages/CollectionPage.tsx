@@ -1,13 +1,24 @@
 import { Link, useNavigate } from "react-router-dom";
+import type { InventoryItem } from "@fridge-inventory/shared";
 import { clearSession } from "../auth/session";
 import { LOCATION_FRIDGE } from "../constants/storage";
-import { formatDateJa } from "../lib/formatDate";
 import { useInventory } from "../lib/useInventory";
 import "../App.css";
 import "./CollectionPage.css";
 
 function isFridgeItem(locationId?: string): boolean {
   return locationId === undefined || locationId === LOCATION_FRIDGE;
+}
+
+function galleryAmountText(item: InventoryItem): string {
+  const cap = item.quantityCaption?.trim();
+  if (cap) return cap;
+  return `×${item.quantity}`;
+}
+
+function categoryLabel(item: InventoryItem): string {
+  const c = item.category?.trim();
+  return c && c.length > 0 ? c : "未分類";
 }
 
 export default function CollectionPage() {
@@ -27,7 +38,7 @@ export default function CollectionPage() {
         <div className="page-header__row">
           <div>
             <h1 className="page-title">冷蔵庫</h1>
-            <p className="page-sub">コレクション</p>
+            <p className="page-sub">ギャラリー</p>
           </div>
           <button
             type="button"
@@ -56,16 +67,46 @@ export default function CollectionPage() {
             </Link>
           </div>
         ) : (
-          <ul className="collection-list page-pad">
+          <ul className="gallery-grid page-pad">
             {fridgeItems.map((item) => (
-              <li key={item.id}>
-                <Link className="collection-row card" to={`/items/${item.id}`}>
-                  <div className="collection-row__main">
-                    <span className="collection-row__name">{item.name}</span>
-                    <span className="collection-row__qty">×{item.quantity}</span>
+              <li key={item.id} className="gallery-grid__cell">
+                <Link
+                  className="gallery-card"
+                  to={`/items/${item.id}`}
+                >
+                  <div className="gallery-card__media">
+                    {item.imageUrl?.trim() ? (
+                      <img
+                        className="gallery-card__img"
+                        src={item.imageUrl.trim()}
+                        alt=""
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div
+                        className="gallery-card__placeholder"
+                        aria-hidden
+                      >
+                        <span className="gallery-card__placeholder-char">
+                          {item.name.trim().slice(0, 1) || "?"}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="collection-row__meta">
-                    期限 {formatDateJa(item.expiresAt)}
+                  <div className="gallery-card__body">
+                    <p
+                      className={`gallery-card__category ${
+                        item.category?.trim()
+                          ? ""
+                          : "gallery-card__category--muted"
+                      }`}
+                    >
+                      {categoryLabel(item)}
+                    </p>
+                    <p className="gallery-card__name">{item.name}</p>
+                    <p className="gallery-card__amount">
+                      {galleryAmountText(item)}
+                    </p>
                   </div>
                 </Link>
               </li>

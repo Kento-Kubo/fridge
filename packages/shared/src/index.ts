@@ -9,8 +9,17 @@ export interface InventoryItem {
   householdId?: string;
   /** 保管場所（例: fridge, freezer, pantry） */
   locationId?: string;
+  /** カテゴリ（例: 野菜、飲料） */
+  category?: string;
+  /** 商品画像の URL（任意） */
+  imageUrl?: string;
   name: string;
   quantity: number;
+  /**
+   * ギャラリー等で数量の代わりに見せる定性テキスト（例: 残りちょっと）。
+   * 未設定時は ×quantity を表示する。
+   */
+  quantityCaption?: string;
   /** ISO 8601 日付文字列（例: 2026-04-10） */
   expiresAt?: string;
   note?: string;

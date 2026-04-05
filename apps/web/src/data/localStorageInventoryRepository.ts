@@ -1,4 +1,5 @@
 import type { InventoryItem, InventoryRepository } from "@fridge-inventory/shared";
+import { createInitialSeedItems } from "./seedInventoryItems";
 
 const STORAGE_KEY = "fridge-inventory-items-v1";
 
@@ -9,6 +10,12 @@ function nowIso(): string {
 function readAll(): InventoryItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
+    /** キー未作成＝このブラウザでは初回。デモ用シードを保存して返す */
+    if (raw === null) {
+      const seeds = createInitialSeedItems();
+      writeAll(seeds);
+      return seeds;
+    }
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
@@ -38,6 +45,15 @@ function isInventoryItem(x: unknown): x is InventoryItem {
     return false;
   }
   if (o.locationId !== undefined && typeof o.locationId !== "string") {
+    return false;
+  }
+  if (o.category !== undefined && typeof o.category !== "string") {
+    return false;
+  }
+  if (o.imageUrl !== undefined && typeof o.imageUrl !== "string") {
+    return false;
+  }
+  if (o.quantityCaption !== undefined && typeof o.quantityCaption !== "string") {
     return false;
   }
   return true;

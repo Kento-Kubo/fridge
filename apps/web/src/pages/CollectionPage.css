@@ -64,50 +64,112 @@
   text-align: center;
 }
 
-.collection-list {
+.gallery-grid {
   list-style: none;
   margin: 0;
-  padding: 0 16px 88px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding: 0 12px 88px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px 10px;
 }
 
-.collection-row {
+.gallery-grid__cell {
+  margin: 0;
+  min-width: 0;
+}
+
+.gallery-card {
   display: block;
   text-decoration: none;
   color: inherit;
-  padding: 14px 16px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #ccfbf1;
+  box-shadow: 0 1px 3px rgb(15 118 110 / 10%);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.collection-row:active {
-  transform: scale(0.99);
+.gallery-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgb(15 118 110 / 14%);
 }
 
-.collection-row__main {
+.gallery-card__media {
+  aspect-ratio: 1;
+  background: #ecfeff;
+  overflow: hidden;
+}
+
+.gallery-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-card__placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #ccfbf1 0%, #99f6e4 100%);
 }
 
-.collection-row__name {
-  font-weight: 600;
-  font-size: 1rem;
-  color: #0f172a;
-}
-
-.collection-row__qty {
+.gallery-card__placeholder-char {
+  font-size: 1.75rem;
   font-weight: 700;
-  color: #0d9488;
-  flex-shrink: 0;
+  color: #0f766e;
+  text-transform: uppercase;
 }
 
-.collection-row__meta {
-  margin-top: 6px;
-  font-size: 0.8rem;
-  color: #64748b;
+.gallery-card__body {
+  padding: 8px 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+}
+
+.gallery-card__category {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #0d9488;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gallery-card__category--muted {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.gallery-card__name {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.gallery-card__amount {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .fab {

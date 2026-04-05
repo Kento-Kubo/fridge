@@ -57,6 +57,13 @@
   letter-spacing: 0.04em;
 }
 
+.detail-summary__category {
+  margin: 0 0 2px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0d9488;
+}
+
 .detail-summary__name {
   margin: 0;
   font-size: 1.1rem;
