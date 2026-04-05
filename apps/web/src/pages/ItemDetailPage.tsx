@@ -1,0 +1,229 @@
+import { useState, type FormEvent } from "react";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import type { InventoryItem } from "@fridge-inventory/shared";
+import {
+  DEFAULT_HOUSEHOLD_ID,
+  LOCATION_FRIDGE,
+} from "../constants/storage";
+import { inventoryRepository } from "../data/inventoryRepositorySingleton";
+import { formatDateJa } from "../lib/formatDate";
+import { useInventory } from "../lib/useInventory";
+import "../App.css";
+import "./ItemDetailPage.css";
+
+type FormDefaults = {
+  name: string;
+  quantity: string;
+  expiresAt: string;
+  note: string;
+};
+
+function emptyDefaults(): FormDefaults {
+  return { name: "", quantity: "1", expiresAt: "", note: "" };
+}
+
+function defaultsFromItem(item: InventoryItem): FormDefaults {
+  return {
+    name: item.name,
+    quantity: String(item.quantity),
+    expiresAt: item.expiresAt?.slice(0, 10) ?? "",
+    note: item.note ?? "",
+  };
+}
+
+function ItemDetailForm({
+  defaults,
+  isNew,
+  itemId,
+  existing,
+}: {
+  defaults: FormDefaults;
+  isNew: boolean;
+  itemId: string;
+  existing: InventoryItem | undefined;
+}) {
+  const navigate = useNavigate();
+  const { refresh, setError, error } = useInventory();
+
+  const [name, setName] = useState(defaults.name);
+  const [quantity, setQuantity] = useState(defaults.quantity);
+  const [expiresAt, setExpiresAt] = useState(defaults.expiresAt);
+  const [note, setNote] = useState(defaults.note);
+
+  const canSubmit = name.trim().length > 0;
+
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    const qty = Number(quantity);
+    if (!Number.isFinite(qty) || qty < 0) {
+      setError("数量は 0 以上の数で入力してください。");
+      return;
+    }
+    setError(null);
+    await inventoryRepository.upsert({
+      id: isNew ? undefined : itemId,
+      householdId: existing?.householdId ?? DEFAULT_HOUSEHOLD_ID,
+      locationId: existing?.locationId ?? LOCATION_FRIDGE,
+      name: name.trim(),
+      quantity: qty,
+      expiresAt: expiresAt || undefined,
+      note: note.trim() || undefined,
+      source: "manual",
+    });
+    await refresh();
+    navigate("/", { replace: true });
+  };
+
+  const onDelete = async () => {
+    if (isNew) return;
+    if (!window.confirm("この商品を削除しますか？")) return;
+    setError(null);
+    await inventoryRepository.remove(itemId);
+    await refresh();
+    navigate("/", { replace: true });
+  };
+
+  return (
+    <div className="detail-page">
+      <header className="detail-header">
+        <button
+          type="button"
+          className="detail-backbtn"
+          onClick={() => navigate(-1)}
+        >
+          ← 戻る
+        </button>
+        <h1 className="detail-title">
+          {isNew ? "商品を追加" : "商品"}
+        </h1>
+      </header>
+
+      <main className="main main--detail">
+        {error ? (
+          <p className="banner banner-error page-pad-block">{error}</p>
+        ) : null}
+        {!isNew && existing ? (
+          <div className="detail-summary card page-pad-block">
+            <p className="detail-summary__label">プレビュー</p>
+            <p className="detail-summary__name">{existing.name}</p>
+            <p className="detail-summary__meta">
+              数量 ×{existing.quantity} ・ 期限{" "}
+              {formatDateJa(existing.expiresAt)}
+            </p>
+          </div>
+        ) : null}
+
+        <section className="card page-pad-block">
+          <form className="form" onSubmit={onSubmit}>
+            <label className="field">
+              <span className="label">名前</span>
+              <input
+                className="input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="例：牛乳"
+                autoComplete="off"
+              />
+            </label>
+            <label className="field">
+              <span className="label">数量</span>
+              <input
+                className="input input-narrow"
+                inputMode="decimal"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+              />
+            </label>
+            <label className="field">
+              <span className="label">消費期限（任意）</span>
+              <input
+                className="input"
+                type="date"
+                value={expiresAt}
+                onChange={(e) => setExpiresAt(e.target.value)}
+              />
+            </label>
+            <label className="field">
+              <span className="label">メモ（任意）</span>
+              <textarea
+                className="input textarea"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={3}
+              />
+            </label>
+            <div className="form-actions form-actions--stack">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={!canSubmit}
+              >
+                保存
+              </button>
+              {!isNew ? (
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={onDelete}
+                >
+                  削除
+                </button>
+              ) : null}
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+export default function ItemDetailPage() {
+  const { itemId } = useParams<{ itemId: string }>();
+  const { items, loading } = useInventory();
+
+  const isNew = itemId === "new";
+  const existing =
+    !itemId || isNew ? undefined : items.find((i) => i.id === itemId);
+
+  if (!itemId) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (!isNew && loading) {
+    return (
+      <div className="detail-page page-pad">
+        <p className="muted">読み込み中…</p>
+      </div>
+    );
+  }
+
+  if (!isNew && !loading && !existing) {
+    return (
+      <div className="detail-page page-pad">
+        <p className="banner banner-error">商品が見つかりません。</p>
+        <Link to="/" className="btn btn-ghost detail-back">
+          冷蔵庫に戻る
+        </Link>
+      </div>
+    );
+  }
+
+  const defaults = isNew
+    ? emptyDefaults()
+    : existing
+      ? defaultsFromItem(existing)
+      : emptyDefaults();
+
+  const formKey = isNew ? "new" : (existing?.id ?? itemId);
+
+  return (
+    <ItemDetailForm
+      key={formKey}
+      defaults={defaults}
+      isNew={isNew}
+      itemId={itemId}
+      existing={existing}
+    />
+  );
+}

@@ -2,6 +2,7 @@
   "name": "fridge-inventory",
   "private": true,
   "workspaces": [
+    "apps/web",
     "apps/mobile",
     "packages/shared"
   ],
@@ -9,6 +10,9 @@
     "node": ">=20.18.0"
   },
   "scripts": {
+    "build": "npm run web:build",
+    "web": "npm run dev -w web",
+    "web:build": "npm run build -w web",
     "mobile": "npm run start -w mobile",
     "build:shared": "npm run build -w @fridge-inventory/shared"
   }

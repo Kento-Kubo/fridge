@@ -6,6 +6,9 @@ node_modules/
 dist/
 web-build/
 
+# Vite PWA 本番ビルド出力
+apps/web/dist/
+
 # Native
 *.orig.*
 *.jks
