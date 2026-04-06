@@ -25,7 +25,7 @@
   margin: 0;
   font-size: 1.35rem;
   font-weight: 700;
-  color: #115e59;
+  color: #1e3a8a;
 }
 
 .subtitle {
@@ -58,15 +58,15 @@
   background: #fff;
   border-radius: 14px;
   padding: 16px;
-  box-shadow: 0 1px 3px rgb(15 118 110 / 12%);
-  border: 1px solid #ccfbf1;
+  box-shadow: 0 1px 3px rgb(29 78 216 / 12%);
+  border: 1px solid #bfdbfe;
 }
 
 .card-title {
   margin: 0 0 12px;
   font-size: 1rem;
   font-weight: 600;
-  color: #134e4a;
+  color: #1e3a8a;
 }
 
 .form {
@@ -96,9 +96,9 @@
 }
 
 .input:focus {
-  outline: 2px solid #2dd4bf;
+  outline: 2px solid #60a5fa;
   outline-offset: 0;
-  border-color: #14b8a6;
+  border-color: #2563eb;
   background: #fff;
 }
 
@@ -133,7 +133,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(160deg, #14b8a6, #0d9488);
+  background: linear-gradient(160deg, #2563eb, #1d4ed8);
   color: #fff;
 }
 
@@ -194,7 +194,7 @@
 }
 
 .list-qty {
-  color: #0f766e;
+  color: #1e40af;
   font-weight: 600;
   flex-shrink: 0;
 }
