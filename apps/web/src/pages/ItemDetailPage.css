@@ -11,9 +11,9 @@
   align-items: center;
   gap: 8px;
   padding: max(8px, env(safe-area-inset-top)) 12px 12px;
-  background: rgb(240 253 250 / 0.92);
+  background: rgb(239 246 255 / 0.92);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid #ccfbf1;
+  border-bottom: 1px solid #bfdbfe;
 }
 
 .detail-backbtn {
@@ -22,7 +22,7 @@
   padding: 8px 6px;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #0d9488;
+  color: #1d4ed8;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -31,7 +31,7 @@
   margin: 0;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #134e4a;
+  color: #1e3a8a;
 }
 
 .main--detail {
@@ -61,7 +61,7 @@
   margin: 0 0 2px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #0d9488;
+  color: #1d4ed8;
 }
 
 .detail-summary__name {
