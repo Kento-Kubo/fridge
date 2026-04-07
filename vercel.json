@@ -7,7 +7,7 @@
   "build": {
     "env": {
       "VITE_APP_PASSWORD": "prod",
-      "VITE_SHEETS_API_URL": ""
+      "VITE_SHEETS_API_URL": "https://script.google.com/macros/s/AKfycbzQqI6KrlR803hPyxCwFJWS2LhI3pv0CPaaTP7uIMFGF5rIHDNE9RUyMio3McVpE4sM/exec"
     }
   }
 }
