@@ -63,6 +63,9 @@ function ItemDetailForm({
   const { refresh, setError, error } = useInventory();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [category, setCategory] = useState(defaults.category);
   const [imageUrl, setImageUrl] = useState(defaults.imageUrl);
@@ -74,7 +77,8 @@ function ItemDetailForm({
   const [expiresAt, setExpiresAt] = useState(defaults.expiresAt);
   const [note, setNote] = useState(defaults.note);
 
-  const canSubmit = name.trim().length > 0 && !uploading;
+  const isBusy = uploading || saving || deleting;
+  const canSubmit = name.trim().length > 0 && !isBusy;
 
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,30 +105,44 @@ function ItemDetailForm({
       return;
     }
     setError(null);
-    await inventoryRepository.upsert({
-      id: isNew ? undefined : itemId,
-      householdId: existing?.householdId ?? DEFAULT_HOUSEHOLD_ID,
-      locationId: existing?.locationId ?? LOCATION_FRIDGE,
-      category: category.trim() || undefined,
-      imageUrl: imageUrl.trim() || undefined,
-      name: name.trim(),
-      quantity: qty,
-      quantityCaption: quantityCaption.trim() || undefined,
-      expiresAt: expiresAt || undefined,
-      note: note.trim() || undefined,
-      source: "manual",
-    });
-    await refresh();
-    navigate("/", { replace: true });
+    setSaving(true);
+    try {
+      await inventoryRepository.upsert({
+        id: isNew ? undefined : itemId,
+        householdId: existing?.householdId ?? DEFAULT_HOUSEHOLD_ID,
+        locationId: existing?.locationId ?? LOCATION_FRIDGE,
+        category: category.trim() || undefined,
+        imageUrl: imageUrl.trim() || undefined,
+        name: name.trim(),
+        quantity: qty,
+        quantityCaption: quantityCaption.trim() || undefined,
+        expiresAt: expiresAt || undefined,
+        note: note.trim() || undefined,
+        source: "manual",
+      });
+      await refresh();
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "保存に失敗しました。");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const onDelete = async () => {
     if (isNew) return;
-    if (!window.confirm("この商品を削除しますか？")) return;
+    setShowDeleteModal(false);
     setError(null);
-    await inventoryRepository.remove(itemId);
-    await refresh();
-    navigate("/", { replace: true });
+    setDeleting(true);
+    try {
+      await inventoryRepository.remove(itemId);
+      await refresh();
+      navigate("/", { replace: true, state: { flashMessage: "削除しました。" } });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "削除に失敗しました。");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -134,6 +152,7 @@ function ItemDetailForm({
           type="button"
           className="detail-backbtn"
           onClick={() => navigate(-1)}
+          disabled={isBusy}
         >
           ← 戻る
         </button>
@@ -175,6 +194,7 @@ function ItemDetailForm({
                 onChange={(e) => setCategory(e.target.value)}
                 placeholder="例：野菜、飲料"
                 autoComplete="off"
+                disabled={isBusy}
               />
             </label>
             <div className="field">
@@ -194,7 +214,7 @@ function ItemDetailForm({
                     accept="image/*"
                     className="input"
                     onChange={onFileChange}
-                    disabled={uploading}
+                    disabled={isBusy}
                   />
                   {uploading && <span className="muted" style={{ fontSize: "0.85em" }}>アップロード中…</span>}
                 </label>
@@ -206,6 +226,7 @@ function ItemDetailForm({
                   placeholder="https://…"
                   inputMode="url"
                   autoComplete="off"
+                  disabled={isBusy}
                 />
               )}
             </div>
@@ -217,6 +238,7 @@ function ItemDetailForm({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="例：牛乳"
                 autoComplete="off"
+                disabled={isBusy}
               />
             </label>
             <label className="field">
@@ -226,6 +248,7 @@ function ItemDetailForm({
                 inputMode="decimal"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
+                disabled={isBusy}
               />
             </label>
             <label className="field">
@@ -236,6 +259,7 @@ function ItemDetailForm({
                 onChange={(e) => setQuantityCaption(e.target.value)}
                 placeholder="例：残りちょっと（未入力なら ×数量 を表示）"
                 autoComplete="off"
+                disabled={isBusy}
               />
             </label>
             <label className="field">
@@ -245,6 +269,7 @@ function ItemDetailForm({
                 type="date"
                 value={expiresAt}
                 onChange={(e) => setExpiresAt(e.target.value)}
+                disabled={isBusy}
               />
             </label>
             <label className="field">
@@ -254,6 +279,7 @@ function ItemDetailForm({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={3}
+                disabled={isBusy}
               />
             </label>
           </form>
@@ -267,18 +293,45 @@ function ItemDetailForm({
           className="btn btn-primary"
           disabled={!canSubmit}
         >
-          保存
+          {saving ? "保存中…" : "保存"}
         </button>
         {!isNew ? (
           <button
             type="button"
             className="btn btn-danger"
-            onClick={onDelete}
+            onClick={() => setShowDeleteModal(true)}
+            disabled={isBusy}
           >
-            削除
+            {deleting ? "削除中…" : "削除"}
           </button>
         ) : null}
       </footer>
+      {showDeleteModal ? (
+        <div className="dialog-backdrop" role="dialog" aria-modal="true" aria-label="削除確認">
+          <div className="card dialog-card">
+            <p className="card-title">削除してもよろしいですか？</p>
+            <p className="muted">この操作は取り消せません。</p>
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={onDelete}
+                disabled={deleting}
+              >
+                {deleting ? "削除中…" : "削除する"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,15 +1,41 @@
 const SESSION_KEY = "fridge-auth-session";
 
+function getSessionStorageSafe(): Storage | null {
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
 export function isAuthenticated(): boolean {
-  return sessionStorage.getItem(SESSION_KEY) === "1";
+  const storage = getSessionStorageSafe();
+  if (!storage) return false;
+  try {
+    return storage.getItem(SESSION_KEY) === "1";
+  } catch {
+    return false;
+  }
 }
 
 export function setAuthenticated(): void {
-  sessionStorage.setItem(SESSION_KEY, "1");
+  const storage = getSessionStorageSafe();
+  if (!storage) return;
+  try {
+    storage.setItem(SESSION_KEY, "1");
+  } catch {
+    // sessionStorage が使えない環境ではセッション保持をスキップ
+  }
 }
 
 export function clearSession(): void {
-  sessionStorage.removeItem(SESSION_KEY);
+  const storage = getSessionStorageSafe();
+  if (!storage) return;
+  try {
+    storage.removeItem(SESSION_KEY);
+  } catch {
+    // no-op
+  }
 }
 
 /** 本番では VITE_APP_PASSWORD を必ず設定。未設定時は開発のみ "dev" でログイン可 */
