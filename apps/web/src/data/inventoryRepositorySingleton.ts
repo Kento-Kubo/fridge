@@ -1,4 +1,12 @@
 import { createLocalStorageInventoryRepository } from "./localStorageInventoryRepository";
+import { createSheetsInventoryRepository } from "./sheetsInventoryRepository";
 
-/** アプリ全体で共有する 1 インスタンス（localStorage 参照が一致するように） */
-export const inventoryRepository = createLocalStorageInventoryRepository();
+/**
+ * VITE_SHEETS_API_URL が設定されている場合は Google スプレッドシートを使用し、
+ * 未設定の場合は localStorage にフォールバックする。
+ */
+const sheetsApiUrl = import.meta.env.VITE_SHEETS_API_URL as string | undefined;
+
+export const inventoryRepository = sheetsApiUrl
+  ? createSheetsInventoryRepository(sheetsApiUrl)
+  : createLocalStorageInventoryRepository();
