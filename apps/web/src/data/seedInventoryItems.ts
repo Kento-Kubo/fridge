@@ -74,7 +74,7 @@ export function createInitialSeedItems(): InventoryItem[] {
       id: "seed-r1",
       name: "R-1",
       category: "乳製品",
-      quantity: 3,
+      quantity: 4,
     },
   ];
 }
