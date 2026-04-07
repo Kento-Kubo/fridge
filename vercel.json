@@ -6,7 +6,8 @@
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "build": {
     "env": {
-      "VITE_APP_PASSWORD": "prod"
+      "VITE_APP_PASSWORD": "prod",
+      "VITE_SHEETS_API_URL": ""
     }
   }
 }

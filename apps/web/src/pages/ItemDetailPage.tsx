@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import type { InventoryItem } from "@fridge-inventory/shared";
 import {
@@ -6,10 +6,13 @@ import {
   LOCATION_FRIDGE,
 } from "../constants/storage";
 import { inventoryRepository } from "../data/inventoryRepositorySingleton";
+import { uploadImageToDrive } from "../data/sheetsInventoryRepository";
 import { formatDateJa } from "../lib/formatDate";
 import { useInventory } from "../lib/useInventory";
 import "../App.css";
 import "./ItemDetailPage.css";
+
+const sheetsApiUrl = import.meta.env.VITE_SHEETS_API_URL as string | undefined;
 
 type FormDefaults = {
   category: string;
@@ -58,6 +61,8 @@ function ItemDetailForm({
 }) {
   const navigate = useNavigate();
   const { refresh, setError, error } = useInventory();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const [category, setCategory] = useState(defaults.category);
   const [imageUrl, setImageUrl] = useState(defaults.imageUrl);
@@ -69,7 +74,23 @@ function ItemDetailForm({
   const [expiresAt, setExpiresAt] = useState(defaults.expiresAt);
   const [note, setNote] = useState(defaults.note);
 
-  const canSubmit = name.trim().length > 0;
+  const canSubmit = name.trim().length > 0 && !uploading;
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !sheetsApiUrl) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const url = await uploadImageToDrive(sheetsApiUrl, file);
+      setImageUrl(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "画像アップロードに失敗しました");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -156,17 +177,38 @@ function ItemDetailForm({
                 autoComplete="off"
               />
             </label>
-            <label className="field">
-              <span className="label">画像 URL（任意）</span>
-              <input
-                className="input"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://…"
-                inputMode="url"
-                autoComplete="off"
-              />
-            </label>
+            <div className="field">
+              <span className="label">画像（任意）</span>
+              {imageUrl && (
+                <img
+                  src={imageUrl}
+                  alt="プレビュー"
+                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, marginBottom: 6 }}
+                />
+              )}
+              {sheetsApiUrl ? (
+                <label className="field" style={{ gap: 4 }}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="input"
+                    onChange={onFileChange}
+                    disabled={uploading}
+                  />
+                  {uploading && <span className="muted" style={{ fontSize: "0.85em" }}>アップロード中…</span>}
+                </label>
+              ) : (
+                <input
+                  className="input"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://…"
+                  inputMode="url"
+                  autoComplete="off"
+                />
+              )}
+            </div>
             <label className="field">
               <span className="label">名前</span>
               <input
