@@ -1,6 +1,26 @@
 .detail-page {
   min-height: 100%;
-  padding-bottom: 88px;
+  /* bottom-nav(56px) + footer(~68px) + 余白 */
+  padding-bottom: 144px;
+}
+
+.detail-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(56px + env(safe-area-inset-bottom));
+  z-index: 40;
+  display: flex;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid #e2e8f0;
+  box-shadow: 0 -2px 12px rgb(29 78 216 / 6%);
+}
+
+.detail-footer .btn {
+  flex: 1;
 }
 
 .detail-header {
