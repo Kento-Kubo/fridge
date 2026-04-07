@@ -29,6 +29,7 @@ async function postAction(apiUrl: string, body: unknown): Promise<unknown> {
   const res = await fetch(apiUrl, {
     method: "POST",
     body: JSON.stringify(body),
+    redirect: "follow",
   });
   if (!res.ok) {
     throw new Error(`Sheets API エラー: ${res.status}`);
@@ -39,7 +40,7 @@ async function postAction(apiUrl: string, body: unknown): Promise<unknown> {
 export function createSheetsInventoryRepository(apiUrl: string): InventoryRepository {
   return {
     async list() {
-      const res = await fetch(apiUrl);
+      const res = await fetch(apiUrl, { redirect: "follow" });
       if (!res.ok) throw new Error(`Sheets API エラー: ${res.status}`);
       const raw = (await res.json()) as unknown[];
       return raw
@@ -56,7 +57,6 @@ export function createSheetsInventoryRepository(apiUrl: string): InventoryReposi
         source: input.source ?? "manual",
       };
       const result = (await postAction(apiUrl, { action: "upsert", item })) as InventoryItem;
-      // Apps Script から返ってきた値が有効なら使い、そうでなければ送った値を返す
       return isInventoryItem(result) ? result : item;
     },
 
@@ -67,31 +67,52 @@ export function createSheetsInventoryRepository(apiUrl: string): InventoryReposi
 }
 
 /**
- * 画像ファイルを Google Drive にアップロードして URL を返す。
+ * 画像を Canvas でリサイズ・圧縮して base64 (JPEG) を返す。
+ * 大きな画像ファイルをそのまま送ると Apps Script がタイムアウトするため
+ * 最大 1024px / quality 0.82 に縮小する。
+ */
+async function resizeToBase64(file: File, maxPx = 1024, quality = 0.82): Promise<{ base64: string; mimeType: string }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { reject(new Error("Canvas 取得失敗")); return; }
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL("image/jpeg", quality);
+      const base64 = dataUrl.split(",")[1];
+      resolve({ base64, mimeType: "image/jpeg" });
+    };
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("画像の読み込みに失敗しました")); };
+    img.src = objectUrl;
+  });
+}
+
+/**
+ * 画像ファイルをリサイズして Google Drive にアップロードし URL を返す。
  * InventoryRepository の外側で使うユーティリティ関数。
  */
 export async function uploadImageToDrive(
   apiUrl: string,
   file: File
 ): Promise<string> {
-  // File を Base64 に変換
-  const base64 = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      // "data:image/jpeg;base64,XXXXX" の XXXXX 部分だけ取り出す
-      const base64Data = result.split(",")[1];
-      resolve(base64Data);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+  const { base64, mimeType } = await resizeToBase64(file);
+
+  const ext = mimeType === "image/jpeg" ? ".jpg" : ".png";
+  const filename = file.name.replace(/\.[^.]+$/, "") + ext;
 
   const body = {
     action: "uploadImage",
     base64,
-    filename: file.name,
-    mimeType: file.type || "image/jpeg",
+    filename,
+    mimeType,
   };
 
   const result = (await postAction(apiUrl, body)) as { url?: string; error?: string };

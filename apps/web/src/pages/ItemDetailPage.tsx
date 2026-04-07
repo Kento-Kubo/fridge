@@ -166,7 +166,7 @@ function ItemDetailForm({
         ) : null}
 
         <section className="card page-pad-block">
-          <form className="form" onSubmit={onSubmit}>
+          <form id="item-form" className="form" onSubmit={onSubmit}>
             <label className="field">
               <span className="label">カテゴリ（任意）</span>
               <input
@@ -256,27 +256,29 @@ function ItemDetailForm({
                 rows={3}
               />
             </label>
-            <div className="form-actions form-actions--stack">
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={!canSubmit}
-              >
-                保存
-              </button>
-              {!isNew ? (
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={onDelete}
-                >
-                  削除
-                </button>
-              ) : null}
-            </div>
           </form>
         </section>
       </main>
+
+      <footer className="detail-footer">
+        <button
+          type="submit"
+          form="item-form"
+          className="btn btn-primary"
+          disabled={!canSubmit}
+        >
+          保存
+        </button>
+        {!isNew ? (
+          <button
+            type="button"
+            className="btn btn-danger"
+            onClick={onDelete}
+          >
+            削除
+          </button>
+        ) : null}
+      </footer>
     </div>
   );
 }

@@ -24,6 +24,34 @@
   font-weight: 500;
 }
 
+.page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-icon {
+  border: none;
+  background: none;
+  padding: 8px;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+
+.btn-icon:active {
+  color: #1d4ed8;
+}
+
+.btn-icon:disabled {
+  opacity: 0.4;
+}
+
 .btn-text {
   border: none;
   background: none;

@@ -23,7 +23,7 @@ function categoryLabel(item: InventoryItem): string {
 
 export default function CollectionPage() {
   const navigate = useNavigate();
-  const { items, loading, error } = useInventory();
+  const { items, loading, error, refresh } = useInventory();
 
   const fridgeItems = items.filter((i) => isFridgeItem(i.locationId));
 
@@ -40,13 +40,26 @@ export default function CollectionPage() {
             <h1 className="page-title">冷蔵庫</h1>
             <p className="page-sub">ギャラリー</p>
           </div>
-          <button
-            type="button"
-            className="btn-text"
-            onClick={onLogout}
-          >
-            ログアウト
-          </button>
+          <div className="page-header__actions">
+            <button
+              type="button"
+              className="btn-icon"
+              onClick={() => refresh()}
+              aria-label="更新"
+              disabled={loading}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <path d="M4 12a8 8 0 0 1 14.93-4H16a1 1 0 1 0 0 2h5a1 1 0 0 0 1-1V4a1 1 0 1 0-2 0v2.36A10 10 0 1 0 22 12a1 1 0 1 0-2 0 8 8 0 0 1-16 0Z" fill="currentColor"/>
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="btn-text"
+              onClick={onLogout}
+            >
+              ログアウト
+            </button>
+          </div>
         </div>
       </header>
 
