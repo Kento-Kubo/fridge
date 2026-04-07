@@ -1,4 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { InventoryItem } from "@fridge-inventory/shared";
 import { clearSession } from "../auth/session";
 import { LOCATION_FRIDGE } from "../constants/storage";
@@ -23,7 +24,16 @@ function categoryLabel(item: InventoryItem): string {
 
 export default function CollectionPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { items, loading, error, refresh } = useInventory();
+  const [flashMessage, setFlashMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const msg = (location.state as { flashMessage?: string } | null)?.flashMessage;
+    if (!msg) return;
+    setFlashMessage(msg);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   const fridgeItems = items.filter((i) => isFridgeItem(i.locationId));
 
@@ -64,6 +74,9 @@ export default function CollectionPage() {
       </header>
 
       <main className="main main--flush">
+        {flashMessage ? (
+          <p className="banner banner-success">{flashMessage}</p>
+        ) : null}
         {error ? (
           <p className="banner banner-error">{error}</p>
         ) : null}
