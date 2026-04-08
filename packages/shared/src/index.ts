@@ -32,3 +32,30 @@ export interface InventoryRepository {
   upsert(item: Omit<InventoryItem, "id" | "updatedAt"> & { id?: string }): Promise<InventoryItem>;
   remove(id: string): Promise<void>;
 }
+
+/**
+ * 入出庫種別: "in" = 入庫（冷蔵庫への入庫）, "out" = 出庫（冷蔵庫からの使用）
+ */
+export type TransactionType = "in" | "out";
+
+/**
+ * 入出庫レコード1行。スプレッドシートの列や API の JSON と対応させる。
+ */
+export interface TransactionRecord {
+  id: string;
+  householdId?: string;
+  /** 対応する在庫アイテム ID（任意） */
+  itemId?: string;
+  /** 取引時点の商品名 */
+  itemName: string;
+  type: TransactionType;
+  quantity: number;
+  note?: string;
+  /** ISO 8601 タイムスタンプ */
+  recordedAt: string;
+}
+
+export interface TransactionRepository {
+  list(): Promise<TransactionRecord[]>;
+  add(record: Omit<TransactionRecord, "id" | "recordedAt"> & { id?: string }): Promise<TransactionRecord>;
+}
