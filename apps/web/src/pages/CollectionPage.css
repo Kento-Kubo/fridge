@@ -104,10 +104,13 @@
 .gallery-grid__cell {
   margin: 0;
   min-width: 0;
+  display: flex;
 }
 
 .gallery-card {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   text-decoration: none;
   color: inherit;
   background: #fff;
@@ -158,7 +161,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-height: 0;
+  flex: 1;
 }
 
 .gallery-card__category {
@@ -183,6 +186,7 @@
   font-weight: 600;
   color: #0f172a;
   line-height: 1.3;
+  min-height: calc(0.78rem * 1.3 * 2);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
