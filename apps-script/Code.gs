@@ -152,13 +152,6 @@ function removeItem(id) {
   }
 }
 
-function listMovements() {
-  var sheet = getMovementsSheet();
-  var data = sheet.getDataRange().getValues();
-  if (data.length <= 1) return [];
-  var headers = data[0];
-  var rows = [];
-
 function getTransactionSheet() {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName(TRANSACTION_SHEET_NAME);
