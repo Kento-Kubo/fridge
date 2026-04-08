@@ -2,6 +2,7 @@
  * 在庫1行。スプレッドシートの列や API の JSON と対応させる。
  */
 export type InventorySource = "manual" | "spreadsheet" | "camera" | "inferred";
+export type MovementType = "in" | "out";
 
 export interface InventoryItem {
   id: string;
@@ -27,10 +28,26 @@ export interface InventoryItem {
   source: InventorySource;
 }
 
+export interface InventoryMovement {
+  id: string;
+  itemId: string;
+  type: MovementType;
+  quantity: number;
+  note?: string;
+  /** ISO 8601 日時文字列（例: 2026-04-09T08:00:00.000Z） */
+  occurredAt: string;
+  updatedAt: string;
+}
+
 export interface InventoryRepository {
   list(): Promise<InventoryItem[]>;
   upsert(item: Omit<InventoryItem, "id" | "updatedAt"> & { id?: string }): Promise<InventoryItem>;
   remove(id: string): Promise<void>;
+  listMovements(): Promise<InventoryMovement[]>;
+  upsertMovement(
+    movement: Omit<InventoryMovement, "id" | "updatedAt"> & { id?: string }
+  ): Promise<InventoryMovement>;
+  removeMovement(id: string): Promise<void>;
 }
 
 /**

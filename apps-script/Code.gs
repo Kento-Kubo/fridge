@@ -13,10 +13,14 @@
 var SPREADSHEET_ID = "1XDzK2LXQzXFvAMohGRoMusp3YBY3G8HqvO6MfMn25Og";
 var DRIVE_FOLDER_ID = "1e17xOkROdD3V9hRjHHeZrQWCUbx8D9R3";
 var SHEET_NAME = "inventory";
+var MOVEMENTS_SHEET_NAME = "movements";
 var COLUMNS = [
   "id", "householdId", "locationId", "category", "imageUrl",
   "name", "quantity", "quantityCaption", "expiresAt", "note",
   "updatedAt", "source"
+];
+var MOVEMENT_COLUMNS = [
+  "id", "itemId", "type", "quantity", "occurredAt", "note", "updatedAt"
 ];
 var TRANSACTION_SHEET_NAME = "transactions";
 var TRANSACTION_COLUMNS = [
@@ -38,6 +42,24 @@ function getSheet() {
   if (firstCell !== "id") {
     sheet.insertRowBefore(1);
     sheet.getRange(1, 1, 1, COLUMNS.length).setValues([COLUMNS]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function getMovementsSheet() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(MOVEMENTS_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(MOVEMENTS_SHEET_NAME);
+    sheet.appendRow(MOVEMENT_COLUMNS);
+    sheet.setFrozenRows(1);
+    return sheet;
+  }
+  var firstCell = sheet.getRange(1, 1).getValue();
+  if (firstCell !== "id") {
+    sheet.insertRowBefore(1);
+    sheet.getRange(1, 1, 1, MOVEMENT_COLUMNS.length).setValues([MOVEMENT_COLUMNS]);
     sheet.setFrozenRows(1);
   }
   return sheet;
@@ -130,6 +152,13 @@ function removeItem(id) {
   }
 }
 
+function listMovements() {
+  var sheet = getMovementsSheet();
+  var data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+  var headers = data[0];
+  var rows = [];
+
 function getTransactionSheet() {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName(TRANSACTION_SHEET_NAME);
@@ -206,6 +235,86 @@ function addTransaction(recordData) {
   return result;
 }
 
+function listMovements() {
+  var sheet = getMovementsSheet();
+  var data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+  var headers = data[0];
+  var rows = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var idIdx = headers.indexOf("id");
+    if (!row[idIdx]) continue;
+    var movement = {};
+    for (var j = 0; j < headers.length; j++) {
+      var val = row[j];
+      if (val !== "" && val !== null && val !== undefined) {
+        movement[headers[j]] = val;
+      }
+    }
+    if (movement["quantity"] !== undefined) {
+      movement["quantity"] = Number(movement["quantity"]);
+    }
+    rows.push(movement);
+  }
+  return rows;
+}
+
+function upsertMovement(movementData) {
+  var sheet = getMovementsSheet();
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var idIdx = headers.indexOf("id");
+
+  var id = movementData.id || Utilities.getUuid();
+  var now = new Date().toISOString();
+  var merged = {};
+  for (var k = 0; k < MOVEMENT_COLUMNS.length; k++) {
+    merged[MOVEMENT_COLUMNS[k]] = "";
+  }
+  for (var key in movementData) {
+    merged[key] = movementData[key] !== undefined ? movementData[key] : "";
+  }
+  merged["id"] = id;
+  merged["updatedAt"] = now;
+
+  var row = MOVEMENT_COLUMNS.map(function(col) {
+    var v = merged[col];
+    return v !== undefined ? v : "";
+  });
+
+  var found = false;
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][idIdx] === id) {
+      sheet.getRange(i + 1, 1, 1, MOVEMENT_COLUMNS.length).setValues([row]);
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    sheet.appendRow(row);
+  }
+
+  var result = {};
+  for (var c = 0; c < MOVEMENT_COLUMNS.length; c++) {
+    if (row[c] !== "") result[MOVEMENT_COLUMNS[c]] = row[c];
+  }
+  result["quantity"] = Number(result["quantity"]);
+  return result;
+}
+
+function removeMovement(id) {
+  var sheet = getMovementsSheet();
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var idIdx = headers.indexOf("id");
+  for (var i = data.length - 1; i >= 1; i--) {
+    if (data[i][idIdx] === id) {
+      sheet.deleteRow(i + 1);
+      break;
+    }
+  }
+}
 function uploadImage(base64Data, filename, mimeType) {
   var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
   var decoded = Utilities.base64Decode(base64Data);
@@ -247,6 +356,13 @@ function doPost(e) {
       result = upsertItem(body.item);
     } else if (action === "remove") {
       removeItem(body.id);
+      result = { success: true };
+    } else if (action === "listMovements") {
+      result = listMovements();
+    } else if (action === "upsertMovement") {
+      result = upsertMovement(body.movement);
+    } else if (action === "removeMovement") {
+      removeMovement(body.id);
       result = { success: true };
     } else if (action === "addTransaction") {
       result = addTransaction(body.record);

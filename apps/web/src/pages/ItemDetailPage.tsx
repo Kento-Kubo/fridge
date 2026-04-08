@@ -18,9 +18,6 @@ type FormDefaults = {
   category: string;
   imageUrl: string;
   name: string;
-  quantity: string;
-  quantityCaption: string;
-  expiresAt: string;
   note: string;
 };
 
@@ -29,9 +26,6 @@ function emptyDefaults(): FormDefaults {
     category: "",
     imageUrl: "",
     name: "",
-    quantity: "1",
-    quantityCaption: "",
-    expiresAt: "",
     note: "",
   };
 }
@@ -41,9 +35,6 @@ function defaultsFromItem(item: InventoryItem): FormDefaults {
     category: item.category ?? "",
     imageUrl: item.imageUrl ?? "",
     name: item.name,
-    quantity: String(item.quantity),
-    quantityCaption: item.quantityCaption ?? "",
-    expiresAt: item.expiresAt?.slice(0, 10) ?? "",
     note: item.note ?? "",
   };
 }
@@ -70,11 +61,6 @@ function ItemDetailForm({
   const [category, setCategory] = useState(defaults.category);
   const [imageUrl, setImageUrl] = useState(defaults.imageUrl);
   const [name, setName] = useState(defaults.name);
-  const [quantity, setQuantity] = useState(defaults.quantity);
-  const [quantityCaption, setQuantityCaption] = useState(
-    defaults.quantityCaption
-  );
-  const [expiresAt, setExpiresAt] = useState(defaults.expiresAt);
   const [note, setNote] = useState(defaults.note);
 
   const isBusy = uploading || saving || deleting;
@@ -99,11 +85,6 @@ function ItemDetailForm({
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    const qty = Number(quantity);
-    if (!Number.isFinite(qty) || qty < 0) {
-      setError("数量は 0 以上の数で入力してください。");
-      return;
-    }
     setError(null);
     setSaving(true);
     try {
@@ -114,9 +95,7 @@ function ItemDetailForm({
         category: category.trim() || undefined,
         imageUrl: imageUrl.trim() || undefined,
         name: name.trim(),
-        quantity: qty,
-        quantityCaption: quantityCaption.trim() || undefined,
-        expiresAt: expiresAt || undefined,
+        quantity: 0,
         note: note.trim() || undefined,
         source: "manual",
       });
@@ -157,7 +136,7 @@ function ItemDetailForm({
           ← 戻る
         </button>
         <h1 className="detail-title">
-          {isNew ? "商品を追加" : "商品"}
+          {isNew ? "商品マスター登録" : "商品マスター"}
         </h1>
       </header>
 
@@ -167,7 +146,7 @@ function ItemDetailForm({
         ) : null}
         {!isNew && existing ? (
           <div className="detail-summary card page-pad-block">
-            <p className="detail-summary__label">プレビュー</p>
+            <p className="detail-summary__label">商品マスター</p>
             <p className="detail-summary__category">
               {existing.category?.trim()
                 ? existing.category.trim()
@@ -175,11 +154,7 @@ function ItemDetailForm({
             </p>
             <p className="detail-summary__name">{existing.name}</p>
             <p className="detail-summary__meta">
-              {existing.quantityCaption?.trim()
-                ? existing.quantityCaption.trim()
-                : `数量 ×${existing.quantity}`}
-              {" ・ 期限 "}
-              {formatDateJa(existing.expiresAt)}
+              更新日 {formatDateJa(existing.updatedAt)}
             </p>
           </div>
         ) : null}
@@ -238,37 +213,6 @@ function ItemDetailForm({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="例：牛乳"
                 autoComplete="off"
-                disabled={isBusy}
-              />
-            </label>
-            <label className="field">
-              <span className="label">数量</span>
-              <input
-                className="input input-narrow"
-                inputMode="decimal"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                disabled={isBusy}
-              />
-            </label>
-            <label className="field">
-              <span className="label">量の表示（任意・定性）</span>
-              <input
-                className="input"
-                value={quantityCaption}
-                onChange={(e) => setQuantityCaption(e.target.value)}
-                placeholder="例：残りちょっと（未入力なら ×数量 を表示）"
-                autoComplete="off"
-                disabled={isBusy}
-              />
-            </label>
-            <label className="field">
-              <span className="label">消費期限（任意）</span>
-              <input
-                className="input"
-                type="date"
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
                 disabled={isBusy}
               />
             </label>

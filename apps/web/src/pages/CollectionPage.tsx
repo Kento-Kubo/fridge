@@ -11,10 +11,8 @@ function isFridgeItem(locationId?: string): boolean {
   return locationId === undefined || locationId === LOCATION_FRIDGE;
 }
 
-function galleryAmountText(item: InventoryItem): string {
-  const cap = item.quantityCaption?.trim();
-  if (cap) return cap;
-  return `×${item.quantity}`;
+function inventoryAmount(item: InventoryItem, balanceMap: Map<string, number>): number {
+  return balanceMap.get(item.id) ?? 0;
 }
 
 function categoryLabel(item: InventoryItem): string {
@@ -25,7 +23,7 @@ function categoryLabel(item: InventoryItem): string {
 export default function CollectionPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items, loading, error, refresh } = useInventory();
+  const { items, movements, loading, error, refresh } = useInventory();
   const [flashMessage, setFlashMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,6 +34,12 @@ export default function CollectionPage() {
   }, [location.pathname, location.state, navigate]);
 
   const fridgeItems = items.filter((i) => isFridgeItem(i.locationId));
+  const balanceMap = new Map<string, number>();
+  for (const m of movements) {
+    const current = balanceMap.get(m.itemId) ?? 0;
+    const delta = m.type === "in" ? m.quantity : -m.quantity;
+    balanceMap.set(m.itemId, current + delta);
+  }
 
   const onLogout = () => {
     clearSession();
@@ -131,7 +135,7 @@ export default function CollectionPage() {
                     </p>
                     <p className="gallery-card__name">{item.name}</p>
                     <p className="gallery-card__amount">
-                      {galleryAmountText(item)}
+                      {`×${inventoryAmount(item, balanceMap)}`}
                     </p>
                   </div>
                 </Link>

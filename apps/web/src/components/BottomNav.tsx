@@ -29,9 +29,8 @@ export function BottomNav() {
         </span>
         <span className="bottom-nav__label">在庫</span>
       </NavLink>
-
       <NavLink
-        to="/transactions"
+        to="/movements"
         className={({ isActive }) =>
           "bottom-nav__link" + (isActive ? " bottom-nav__link--active" : "")
         }
@@ -45,11 +44,10 @@ export function BottomNav() {
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
-              d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5"
+              d="M7 7h10M7 12h10M7 17h10M4 7h.01M4 12h.01M4 17h.01"
               stroke="currentColor"
               strokeWidth="1.75"
               strokeLinecap="round"
-              strokeLinejoin="round"
             />
           </svg>
         </span>

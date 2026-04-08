@@ -5,7 +5,11 @@
  * CORS プリフライトを避けるため fetch の Content-Type は設定しない
  * (body は JSON 文字列だが Apps Script は text/plain として受け取る)。
  */
-import type { InventoryItem, InventoryRepository } from "@fridge-inventory/shared";
+import type {
+  InventoryItem,
+  InventoryMovement,
+  InventoryRepository,
+} from "@fridge-inventory/shared";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -43,6 +47,32 @@ function normalizeInventoryItem(raw: unknown): InventoryItem | null {
     imageUrl: toOptionalString(raw.imageUrl),
     quantityCaption: toOptionalString(raw.quantityCaption),
     expiresAt: toOptionalString(raw.expiresAt),
+    note: toOptionalString(raw.note),
+  };
+}
+
+function isInventoryMovement(x: unknown): x is InventoryMovement {
+  if (x === null || typeof x !== "object") return false;
+  const o = x as Record<string, unknown>;
+  return (
+    typeof o.id === "string" &&
+    typeof o.itemId === "string" &&
+    (o.type === "in" || o.type === "out") &&
+    typeof o.quantity === "number" &&
+    typeof o.occurredAt === "string" &&
+    typeof o.updatedAt === "string"
+  );
+}
+
+function normalizeInventoryMovement(raw: unknown): InventoryMovement | null {
+  if (!isInventoryMovement(raw)) return null;
+  return {
+    id: raw.id,
+    itemId: raw.itemId,
+    type: raw.type,
+    quantity: raw.quantity,
+    occurredAt: raw.occurredAt,
+    updatedAt: raw.updatedAt,
     note: toOptionalString(raw.note),
   };
 }
@@ -94,6 +124,35 @@ export function createSheetsInventoryRepository(apiUrl: string): InventoryReposi
 
     async remove(id) {
       await postAction(apiUrl, { action: "remove", id });
+    },
+    async listMovements() {
+      const result = await postAction(apiUrl, { action: "listMovements" });
+      if (!Array.isArray(result)) {
+        throw new Error("Sheets API 形式エラー: 入出庫履歴が配列ではありません");
+      }
+      return result
+        .map(normalizeInventoryMovement)
+        .filter((x): x is InventoryMovement => x !== null)
+        .sort(
+          (a, b) =>
+            new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime()
+        );
+    },
+    async upsertMovement(input) {
+      const id = input.id ?? `mv-${crypto.randomUUID()}`;
+      const movement: InventoryMovement = {
+        ...input,
+        id,
+        updatedAt: nowIso(),
+      };
+      const result = await postAction(apiUrl, {
+        action: "upsertMovement",
+        movement,
+      });
+      return normalizeInventoryMovement(result) ?? movement;
+    },
+    async removeMovement(id) {
+      await postAction(apiUrl, { action: "removeMovement", id });
     },
   };
 }
