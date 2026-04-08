@@ -18,8 +18,12 @@
   bottom: calc(72px + env(safe-area-inset-bottom));
   z-index: 40;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   gap: 10px;
+}
+
+.movement-fab-group .fab {
+  position: static;
 }
 
 .fab--in {
