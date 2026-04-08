@@ -18,6 +18,10 @@ var COLUMNS = [
   "name", "quantity", "quantityCaption", "expiresAt", "note",
   "updatedAt", "source"
 ];
+var TRANSACTION_SHEET_NAME = "transactions";
+var TRANSACTION_COLUMNS = [
+  "id", "householdId", "itemId", "itemName", "type", "quantity", "note", "recordedAt"
+];
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getSheet() {
@@ -126,6 +130,82 @@ function removeItem(id) {
   }
 }
 
+function getTransactionSheet() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(TRANSACTION_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(TRANSACTION_SHEET_NAME);
+    sheet.appendRow(TRANSACTION_COLUMNS);
+    sheet.setFrozenRows(1);
+    return sheet;
+  }
+  var firstCell = sheet.getRange(1, 1).getValue();
+  if (firstCell !== "id") {
+    sheet.insertRowBefore(1);
+    sheet.getRange(1, 1, 1, TRANSACTION_COLUMNS.length).setValues([TRANSACTION_COLUMNS]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function listTransactions() {
+  var sheet = getTransactionSheet();
+  var data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+  var headers = data[0];
+  var records = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var idIdx = headers.indexOf("id");
+    if (!row[idIdx]) continue;
+    var record = {};
+    for (var j = 0; j < headers.length; j++) {
+      var val = row[j];
+      if (val !== "" && val !== null && val !== undefined) {
+        record[headers[j]] = val;
+      }
+    }
+    if (record["quantity"] !== undefined) {
+      record["quantity"] = Number(record["quantity"]);
+    }
+    records.push(record);
+  }
+  // 新しい順（recordedAt 降順）で返す
+  records.sort(function(a, b) {
+    return (b["recordedAt"] || "").localeCompare(a["recordedAt"] || "");
+  });
+  return records;
+}
+
+function addTransaction(recordData) {
+  var sheet = getTransactionSheet();
+  var id = recordData.id || Utilities.getUuid();
+  var now = new Date().toISOString();
+  var merged = {};
+  for (var k = 0; k < TRANSACTION_COLUMNS.length; k++) {
+    merged[TRANSACTION_COLUMNS[k]] = "";
+  }
+  for (var key in recordData) {
+    merged[key] = recordData[key] !== undefined ? recordData[key] : "";
+  }
+  merged["id"] = id;
+  merged["recordedAt"] = now;
+
+  var row = TRANSACTION_COLUMNS.map(function(col) {
+    var v = merged[col];
+    return v !== undefined ? v : "";
+  });
+
+  sheet.appendRow(row);
+
+  var result = {};
+  for (var c = 0; c < TRANSACTION_COLUMNS.length; c++) {
+    if (row[c] !== "") result[TRANSACTION_COLUMNS[c]] = row[c];
+  }
+  result["quantity"] = Number(result["quantity"]);
+  return result;
+}
+
 function uploadImage(base64Data, filename, mimeType) {
   var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
   var decoded = Utilities.base64Decode(base64Data);
@@ -140,9 +220,15 @@ function uploadImage(base64Data, filename, mimeType) {
 
 function doGet(e) {
   try {
-    var items = listItems();
+    var resource = e && e.parameter && e.parameter.resource;
+    var data;
+    if (resource === "transactions") {
+      data = listTransactions();
+    } else {
+      data = listItems();
+    }
     return ContentService
-      .createTextOutput(JSON.stringify(items))
+      .createTextOutput(JSON.stringify(data))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService
@@ -162,6 +248,8 @@ function doPost(e) {
     } else if (action === "remove") {
       removeItem(body.id);
       result = { success: true };
+    } else if (action === "addTransaction") {
+      result = addTransaction(body.record);
     } else if (action === "uploadImage") {
       var url = uploadImage(body.base64, body.filename, body.mimeType);
       result = { url: url };

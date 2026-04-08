@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { isAuthenticated } from "../auth/session";
 import { InventoryProvider } from "../lib/InventoryProvider";
+import { TransactionProvider } from "../lib/TransactionProvider";
 import { BottomNav } from "./BottomNav";
 import "../App.css";
 
@@ -22,7 +23,9 @@ export function ProtectedLayout() {
 
   return (
     <InventoryProvider>
-      <ProtectedShell />
+      <TransactionProvider>
+        <ProtectedShell />
+      </TransactionProvider>
     </InventoryProvider>
   );
 }
