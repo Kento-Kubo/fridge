@@ -17,6 +17,7 @@ export default function App() {
           <Route path="/items/:itemId" element={<ItemDetailPage />} />
           <Route path="/movements" element={<MovementsPage />} />
           <Route path="/movements/:movementId" element={<MovementDetailPage />} />
+          <Route path="/transactions" element={<Navigate to="/movements" replace />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
