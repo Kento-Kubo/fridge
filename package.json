@@ -15,7 +15,7 @@
     "web:build": "npm run build -w web",
     "mobile": "npm run start -w mobile",
     "build:shared": "npm run build -w @fridge-inventory/shared",
-    "gas:push": "clasp push",
-    "gas:deploy": "clasp push && clasp deploy --deploymentId AKfycbzQqI6KrlR803hPyxCwFJWS2LhI3pv0CPaaTP7uIMFGF5rIHDNE9RUyMio3McVpE4sM"
+    "gas:push": "npx @google/clasp push",
+    "gas:deploy": "npx @google/clasp push && npx @google/clasp deploy --deploymentId AKfycbzQqI6KrlR803hPyxCwFJWS2LhI3pv0CPaaTP7uIMFGF5rIHDNE9RUyMio3McVpE4sM"
   }
 }
