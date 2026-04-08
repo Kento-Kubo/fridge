@@ -29,9 +29,9 @@ function normalizeRecord(raw: unknown): TransactionRecord | null {
     type: raw.type,
     quantity: raw.quantity,
     recordedAt: raw.recordedAt,
-    householdId: toOptionalString((raw as Record<string, unknown>).householdId),
-    itemId: toOptionalString((raw as Record<string, unknown>).itemId),
-    note: toOptionalString((raw as Record<string, unknown>).note),
+    householdId: toOptionalString(raw.householdId),
+    itemId: toOptionalString(raw.itemId),
+    note: toOptionalString(raw.note),
   };
 }
 
