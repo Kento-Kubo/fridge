@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { InventoryMovement } from "@fridge-inventory/shared";
 import { inventoryRepository } from "../data/inventoryRepositorySingleton";
 import { useInventory } from "../lib/useInventory";
@@ -19,11 +19,15 @@ function isoToDateInput(v?: string): string {
   return v.slice(0, 10);
 }
 
-function defaultsFromMovement(movement: InventoryMovement | undefined, fallbackItemId: string): FormDefaults {
+function defaultsFromMovement(
+  movement: InventoryMovement | undefined,
+  fallbackItemId: string,
+  initialType: "in" | "out"
+): FormDefaults {
   if (!movement) {
     return {
       itemId: fallbackItemId,
-      type: "in",
+      type: initialType,
       quantity: "1",
       occurredAt: isoToDateInput(),
       note: "",
@@ -40,6 +44,7 @@ function defaultsFromMovement(movement: InventoryMovement | undefined, fallbackI
 
 export default function MovementDetailPage() {
   const { movementId } = useParams<{ movementId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { items, movements, loading, refresh, setError, error } = useInventory();
   const [saving, setSaving] = useState(false);
@@ -48,7 +53,9 @@ export default function MovementDetailPage() {
   const isNew = movementId === "new";
   const existing = isNew ? undefined : movements.find((m) => m.id === movementId);
   const fallbackItemId = items[0]?.id ?? "";
-  const defaults = defaultsFromMovement(existing, fallbackItemId);
+  const requestedType = searchParams.get("type");
+  const initialType: "in" | "out" = requestedType === "out" ? "out" : "in";
+  const defaults = defaultsFromMovement(existing, fallbackItemId, initialType);
 
   const [itemId, setItemId] = useState(defaults.itemId);
   const [type, setType] = useState<"in" | "out">(defaults.type);
