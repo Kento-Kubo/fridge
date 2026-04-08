@@ -1,8 +1,9 @@
 import { createContext } from "react";
-import type { InventoryItem } from "@fridge-inventory/shared";
+import type { InventoryItem, InventoryMovement } from "@fridge-inventory/shared";
 
 export type InventoryContextValue = {
   items: InventoryItem[];
+  movements: InventoryMovement[];
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
