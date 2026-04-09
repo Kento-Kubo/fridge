@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { formatDateJa } from "../lib/formatDate";
 import { useInventory } from "../lib/useInventory";
 import "../App.css";
 import "./CollectionPage.css";
@@ -8,6 +7,14 @@ import "./MovementsPage.css";
 
 function movementLabel(type: "in" | "out"): string {
   return type === "in" ? "入庫" : "出庫";
+}
+
+function formatDateYmd(value: string): string {
+  const date = new Date(value);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}/${m}/${d}`;
 }
 
 export default function MovementsPage() {
@@ -83,17 +90,26 @@ export default function MovementsPage() {
             <p className="muted">まだ入出庫履歴がありません。</p>
           </div>
         ) : (
-          <ul className="list card page-pad movements-list">
+          <ul className="list movements-list">
             {visibleMovements.map((m) => (
               <li key={m.id} className="list-item">
-                <Link to={`/movements/${m.id}`} className="gallery-card">
+                <Link
+                  to={`/movements/${m.id}`}
+                  className={`gallery-card movement-card movement-card--${m.type}`}
+                >
                   <div className="gallery-card__body">
-                    <p className="gallery-card__category">{movementLabel(m.type)}</p>
-                    <p className="gallery-card__name">
-                      {nameMap.get(m.itemId) ?? "削除された商品"}
-                    </p>
-                    <p className="gallery-card__amount">{`数量 ×${m.quantity}`}</p>
-                    <p className="muted">{formatDateJa(m.occurredAt)}</p>
+                    <div className="movement-record-head">
+                      <p className="gallery-card__category movement-record-type">
+                        {movementLabel(m.type)}
+                      </p>
+                      <p className="movement-record-date">{formatDateYmd(m.occurredAt)}</p>
+                    </div>
+                    <div className="movement-record-row">
+                      <p className="gallery-card__name movement-record-name">
+                        {nameMap.get(m.itemId) ?? "削除された商品"}
+                      </p>
+                      <p className="gallery-card__amount movement-record-amount">{`数量 ×${m.quantity}`}</p>
+                    </div>
                   </div>
                 </Link>
               </li>

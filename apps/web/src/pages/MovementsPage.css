@@ -12,6 +12,76 @@
   margin: 0 16px;
 }
 
+.movements-list .list-item {
+  padding: 8px 0;
+  border-bottom: none;
+}
+
+.movements-list .list-item:first-child {
+  padding-top: 0;
+}
+
+.movements-list .list-item:last-child {
+  padding-bottom: 0;
+}
+
+.movements-list .gallery-card__body {
+  gap: 6px;
+}
+
+.movement-card--in {
+  background: #f0fdf4;
+}
+
+.movement-card--out {
+  background: #fef2f2;
+}
+
+.movement-record-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.movement-record-type {
+  margin: 0;
+}
+
+.movement-record-date {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+.movement-record-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.movement-record-name {
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  font-size: 0.86rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.movement-record-amount {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 0.82rem;
+}
+
 .movement-fab-group {
   position: fixed;
   right: max(20px, env(safe-area-inset-right));
