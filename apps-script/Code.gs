@@ -20,7 +20,7 @@ var COLUMNS = [
   "updatedAt", "source", "isRoutine"
 ];
 var MOVEMENT_COLUMNS = [
-  "id", "itemId", "type", "quantity", "occurredAt", "note", "updatedAt"
+  "id", "itemId", "type", "quantity", "occurredAt", "expiresAt", "note", "updatedAt"
 ];
 var TRANSACTION_SHEET_NAME = "transactions";
 var TRANSACTION_COLUMNS = [
@@ -73,6 +73,18 @@ function getMovementsSheet() {
     sheet.insertRowBefore(1);
     sheet.getRange(1, 1, 1, MOVEMENT_COLUMNS.length).setValues([MOVEMENT_COLUMNS]);
     sheet.setFrozenRows(1);
+  }
+  var movementHeaderRangeWidth = Math.max(sheet.getLastColumn(), MOVEMENT_COLUMNS.length);
+  var movementHeaderRow = sheet.getRange(1, 1, 1, movementHeaderRangeWidth).getValues()[0];
+  var needsMovementHeaderUpdate = false;
+  for (var i = 0; i < MOVEMENT_COLUMNS.length; i++) {
+    if (movementHeaderRow[i] !== MOVEMENT_COLUMNS[i]) {
+      needsMovementHeaderUpdate = true;
+      break;
+    }
+  }
+  if (needsMovementHeaderUpdate) {
+    sheet.getRange(1, 1, 1, MOVEMENT_COLUMNS.length).setValues([MOVEMENT_COLUMNS]);
   }
   return sheet;
 }

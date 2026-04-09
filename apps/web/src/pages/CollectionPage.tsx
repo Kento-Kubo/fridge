@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import type { InventoryItem } from "@fridge-inventory/shared";
+import type { InventoryItem, InventoryMovement } from "@fridge-inventory/shared";
 import { clearSession } from "../auth/session";
 import { LOCATION_FRIDGE } from "../constants/storage";
 import { useInventory } from "../lib/useInventory";
@@ -13,6 +13,69 @@ function isFridgeItem(locationId?: string): boolean {
 
 function inventoryAmount(item: InventoryItem, balanceMap: Map<string, number>): number {
   return balanceMap.get(item.id) ?? 0;
+}
+
+type StockBucket = {
+  expiresAt?: string;
+  quantity: number;
+};
+
+function bucketSortValue(expiresAt?: string): number {
+  if (!expiresAt) return Number.POSITIVE_INFINITY;
+  const ts = new Date(expiresAt).getTime();
+  return Number.isNaN(ts) ? Number.POSITIVE_INFINITY : ts;
+}
+
+function sortBuckets(a: StockBucket, b: StockBucket): number {
+  const diff = bucketSortValue(a.expiresAt) - bucketSortValue(b.expiresAt);
+  if (diff !== 0) return diff;
+  return (a.expiresAt ?? "").localeCompare(b.expiresAt ?? "");
+}
+
+function buildStockBuckets(movements: InventoryMovement[]): Map<string, StockBucket[]> {
+  const ordered = [...movements].sort((a, b) => {
+    const diff = new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime();
+    if (diff !== 0) return diff;
+    if (a.type === b.type) return 0;
+    return a.type === "in" ? -1 : 1;
+  });
+  const bucketMap = new Map<string, StockBucket[]>();
+  for (const movement of ordered) {
+    const buckets = bucketMap.get(movement.itemId) ?? [];
+    if (movement.type === "in") {
+      const expiresAt = movement.expiresAt?.trim() || undefined;
+      const existing = buckets.find((b) => (b.expiresAt ?? "") === (expiresAt ?? ""));
+      if (existing) {
+        existing.quantity += movement.quantity;
+      } else {
+        buckets.push({ expiresAt, quantity: movement.quantity });
+      }
+      buckets.sort(sortBuckets);
+      bucketMap.set(movement.itemId, buckets);
+      continue;
+    }
+    let remaining = movement.quantity;
+    buckets.sort(sortBuckets);
+    for (const bucket of buckets) {
+      if (remaining <= 0) break;
+      const consumed = Math.min(bucket.quantity, remaining);
+      bucket.quantity -= consumed;
+      remaining -= consumed;
+    }
+    const positiveBuckets = buckets.filter((b) => b.quantity > 0).sort(sortBuckets);
+    bucketMap.set(movement.itemId, positiveBuckets);
+  }
+  return bucketMap;
+}
+
+function formatExpiryLabel(expiresAt?: string): string {
+  if (!expiresAt) return "賞味期限未登録";
+  const date = new Date(expiresAt);
+  if (Number.isNaN(date.getTime())) return expiresAt;
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}/${m}/${d}`;
 }
 
 function categoryLabel(item: InventoryItem): string {
@@ -34,12 +97,13 @@ export default function CollectionPage() {
   }, [location.pathname, location.state, navigate]);
 
   const fridgeItems = items.filter((i) => isFridgeItem(i.locationId));
-  const balanceMap = new Map<string, number>();
-  for (const m of movements) {
-    const current = balanceMap.get(m.itemId) ?? 0;
-    const delta = m.type === "in" ? m.quantity : -m.quantity;
-    balanceMap.set(m.itemId, current + delta);
-  }
+  const stockBucketMap = buildStockBuckets(movements);
+  const balanceMap = new Map<string, number>(
+    [...stockBucketMap.entries()].map(([itemId, buckets]) => [
+      itemId,
+      buckets.reduce((sum, bucket) => sum + bucket.quantity, 0),
+    ])
+  );
   const classifiedItems = fridgeItems
     .map((item) => {
       const amount = inventoryAmount(item, balanceMap);
@@ -48,6 +112,7 @@ export default function CollectionPage() {
       return {
         item,
         amount,
+        buckets: stockBucketMap.get(item.id) ?? [],
         isRoutine,
         isDisabled: isOutOfStock && !isRoutine,
       };
@@ -116,7 +181,7 @@ export default function CollectionPage() {
             <section>
               <h2 className="stock-section-title">在庫あり</h2>
               <ul className="gallery-grid">
-                {activeItems.map(({ item, amount, isRoutine }) => (
+                {activeItems.map(({ item, amount, buckets, isRoutine }) => (
                   <li key={item.id} className="gallery-grid__cell">
                     <Link className="gallery-card" to={`/items/${item.id}`}>
                   <div className="gallery-card__media">
@@ -157,6 +222,15 @@ export default function CollectionPage() {
                     <p className="gallery-card__amount">
                       {isRoutine ? `×${amount} / ルーティーン` : `×${amount}`}
                     </p>
+                    {buckets.length > 0 ? (
+                      <ul className="gallery-card__stock-by-expiry">
+                        {buckets.map((bucket) => (
+                          <li key={`${item.id}:${bucket.expiresAt ?? "none"}`}>
+                            {`${bucket.quantity}個（${formatExpiryLabel(bucket.expiresAt)}）`}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                     </Link>
                   </li>

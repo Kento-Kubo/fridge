@@ -35,6 +35,8 @@ export interface InventoryMovement {
   itemId: string;
   type: MovementType;
   quantity: number;
+  /** ISO 8601 日付文字列（例: 2026-04-10） */
+  expiresAt?: string;
   note?: string;
   /** ISO 8601 日時文字列（例: 2026-04-09T08:00:00.000Z） */
   occurredAt: string;

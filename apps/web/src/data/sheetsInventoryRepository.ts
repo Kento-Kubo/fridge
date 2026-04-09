@@ -82,6 +82,7 @@ function normalizeInventoryMovement(raw: unknown): InventoryMovement | null {
     itemId: raw.itemId,
     type: raw.type,
     quantity: raw.quantity,
+    expiresAt: toOptionalString(raw.expiresAt),
     occurredAt: raw.occurredAt,
     updatedAt: raw.updatedAt,
     note: toOptionalString(raw.note),
