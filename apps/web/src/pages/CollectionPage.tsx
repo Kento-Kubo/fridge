@@ -214,9 +214,6 @@ export default function CollectionPage() {
                       >
                         {categoryLabel(item)}
                       </p>
-                      {isRoutine ? (
-                        <p className="gallery-card__badge">ルーティーン</p>
-                      ) : null}
                     </div>
                     <p className="gallery-card__name">{item.name}</p>
                     <p className="gallery-card__amount">
@@ -226,7 +223,9 @@ export default function CollectionPage() {
                       <ul className="gallery-card__stock-by-expiry">
                         {buckets.map((bucket) => (
                           <li key={`${item.id}:${bucket.expiresAt ?? "none"}`}>
-                            {`${bucket.quantity}個（${formatExpiryLabel(bucket.expiresAt)}）`}
+                            {bucket.expiresAt
+                              ? `${bucket.quantity}個（${formatExpiryLabel(bucket.expiresAt)}）`
+                              : `${bucket.quantity}個`}
                           </li>
                         ))}
                       </ul>
