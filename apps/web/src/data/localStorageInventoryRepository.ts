@@ -74,6 +74,9 @@ function isInventoryItem(x: unknown): x is InventoryItem {
   if (o.imageUrl !== undefined && typeof o.imageUrl !== "string") {
     return false;
   }
+  if (o.isRoutine !== undefined && typeof o.isRoutine !== "boolean") {
+    return false;
+  }
   if (o.quantityCaption !== undefined && typeof o.quantityCaption !== "string") {
     return false;
   }

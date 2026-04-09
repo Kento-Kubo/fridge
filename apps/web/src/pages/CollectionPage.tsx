@@ -40,6 +40,21 @@ export default function CollectionPage() {
     const delta = m.type === "in" ? m.quantity : -m.quantity;
     balanceMap.set(m.itemId, current + delta);
   }
+  const classifiedItems = fridgeItems
+    .map((item) => {
+      const amount = inventoryAmount(item, balanceMap);
+      const isOutOfStock = amount <= 0;
+      const isRoutine = item.isRoutine === true;
+      return {
+        item,
+        amount,
+        isRoutine,
+        isDisabled: isOutOfStock && !isRoutine,
+      };
+    })
+    .sort((a, b) => a.item.name.localeCompare(b.item.name, "ja"));
+  const activeItems = classifiedItems.filter((x) => !x.isDisabled);
+  const disabledItems = classifiedItems.filter((x) => x.isDisabled);
 
   const onLogout = () => {
     clearSession();
@@ -87,7 +102,7 @@ export default function CollectionPage() {
 
         {loading ? (
           <p className="muted page-pad">読み込み中…</p>
-        ) : fridgeItems.length === 0 ? (
+        ) : classifiedItems.length === 0 ? (
           <div className="page-pad empty-state card">
             <p className="muted empty-state__text">
               冷蔵庫の在庫はまだありません。
@@ -97,13 +112,13 @@ export default function CollectionPage() {
             </Link>
           </div>
         ) : (
-          <ul className="gallery-grid page-pad">
-            {fridgeItems.map((item) => (
-              <li key={item.id} className="gallery-grid__cell">
-                <Link
-                  className="gallery-card"
-                  to={`/items/${item.id}`}
-                >
+          <div className="stock-sections page-pad">
+            <section>
+              <h2 className="stock-section-title">在庫あり</h2>
+              <ul className="gallery-grid">
+                {activeItems.map(({ item, amount, isRoutine }) => (
+                  <li key={item.id} className="gallery-grid__cell">
+                    <Link className="gallery-card" to={`/items/${item.id}`}>
                   <div className="gallery-card__media">
                     {item.imageUrl?.trim() ? (
                       <img
@@ -124,24 +139,73 @@ export default function CollectionPage() {
                     )}
                   </div>
                   <div className="gallery-card__body">
-                    <p
-                      className={`gallery-card__category ${
-                        item.category?.trim()
-                          ? ""
-                          : "gallery-card__category--muted"
-                      }`}
-                    >
-                      {categoryLabel(item)}
-                    </p>
+                    <div className="gallery-card__meta-row">
+                      <p
+                        className={`gallery-card__category ${
+                          item.category?.trim()
+                            ? ""
+                            : "gallery-card__category--muted"
+                        }`}
+                      >
+                        {categoryLabel(item)}
+                      </p>
+                      {isRoutine ? (
+                        <p className="gallery-card__badge">ルーティーン</p>
+                      ) : null}
+                    </div>
                     <p className="gallery-card__name">{item.name}</p>
                     <p className="gallery-card__amount">
-                      {`×${inventoryAmount(item, balanceMap)}`}
+                      {isRoutine ? `×${amount} / ルーティーン` : `×${amount}`}
                     </p>
                   </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {disabledItems.length > 0 ? (
+              <section className="stock-section stock-section--out">
+                <h2 className="stock-section-title stock-section-title--muted">在庫切れ</h2>
+                <ul className="gallery-grid">
+                  {disabledItems.map(({ item, amount }) => (
+                    <li key={item.id} className="gallery-grid__cell">
+                      <Link
+                        className="gallery-card gallery-card--disabled"
+                        to="#"
+                        onClick={(e) => e.preventDefault()}
+                        aria-disabled
+                        tabIndex={-1}
+                      >
+                        <div className="gallery-card__media">
+                          {item.imageUrl?.trim() ? (
+                            <img className="gallery-card__img" src={item.imageUrl.trim()} alt="" loading="lazy" />
+                          ) : (
+                            <div className="gallery-card__placeholder" aria-hidden>
+                              <span className="gallery-card__placeholder-char">
+                                {item.name.trim().slice(0, 1) || "?"}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="gallery-card__body">
+                          <p
+                            className={`gallery-card__category ${
+                              item.category?.trim() ? "" : "gallery-card__category--muted"
+                            }`}
+                          >
+                            {categoryLabel(item)}
+                          </p>
+                          <p className="gallery-card__name">{item.name}</p>
+                          <p className="gallery-card__amount">{`×${amount}`}</p>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+          </div>
         )}
       </main>
 

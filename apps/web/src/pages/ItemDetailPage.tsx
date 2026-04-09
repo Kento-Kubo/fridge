@@ -17,6 +17,7 @@ const sheetsApiUrl = import.meta.env.VITE_SHEETS_API_URL as string | undefined;
 type FormDefaults = {
   category: string;
   imageUrl: string;
+  isRoutine: boolean;
   name: string;
   note: string;
 };
@@ -25,6 +26,7 @@ function emptyDefaults(): FormDefaults {
   return {
     category: "",
     imageUrl: "",
+    isRoutine: false,
     name: "",
     note: "",
   };
@@ -34,6 +36,7 @@ function defaultsFromItem(item: InventoryItem): FormDefaults {
   return {
     category: item.category ?? "",
     imageUrl: item.imageUrl ?? "",
+    isRoutine: item.isRoutine ?? false,
     name: item.name,
     note: item.note ?? "",
   };
@@ -60,6 +63,7 @@ function ItemDetailForm({
 
   const [category, setCategory] = useState(defaults.category);
   const [imageUrl, setImageUrl] = useState(defaults.imageUrl);
+  const [isRoutine, setIsRoutine] = useState(defaults.isRoutine);
   const [name, setName] = useState(defaults.name);
   const [note, setNote] = useState(defaults.note);
 
@@ -94,6 +98,7 @@ function ItemDetailForm({
         locationId: existing?.locationId ?? LOCATION_FRIDGE,
         category: category.trim() || undefined,
         imageUrl: imageUrl.trim() || undefined,
+        isRoutine,
         name: name.trim(),
         quantity: 0,
         note: note.trim() || undefined,
@@ -204,6 +209,18 @@ function ItemDetailForm({
                   disabled={isBusy}
                 />
               )}
+            </div>
+            <div className="field">
+              <span className="label">在庫切れ時の扱い</span>
+              <label className="input item-routine-toggle">
+                <input
+                  type="checkbox"
+                  checked={isRoutine}
+                  onChange={(e) => setIsRoutine(e.target.checked)}
+                  disabled={isBusy}
+                />
+                <span>ルーティーン管理する（在庫切れでも在庫タブに表示）</span>
+              </label>
             </div>
             <label className="field">
               <span className="label">名前</span>

@@ -17,7 +17,7 @@ var MOVEMENTS_SHEET_NAME = "movements";
 var COLUMNS = [
   "id", "householdId", "locationId", "category", "imageUrl",
   "name", "quantity", "quantityCaption", "expiresAt", "note",
-  "updatedAt", "source"
+  "updatedAt", "source", "isRoutine"
 ];
 var MOVEMENT_COLUMNS = [
   "id", "itemId", "type", "quantity", "occurredAt", "note", "updatedAt"
@@ -43,6 +43,18 @@ function getSheet() {
     sheet.insertRowBefore(1);
     sheet.getRange(1, 1, 1, COLUMNS.length).setValues([COLUMNS]);
     sheet.setFrozenRows(1);
+  }
+  var headerRangeWidth = Math.max(sheet.getLastColumn(), COLUMNS.length);
+  var headerRow = sheet.getRange(1, 1, 1, headerRangeWidth).getValues()[0];
+  var needsHeaderUpdate = false;
+  for (var i = 0; i < COLUMNS.length; i++) {
+    if (headerRow[i] !== COLUMNS[i]) {
+      needsHeaderUpdate = true;
+      break;
+    }
+  }
+  if (needsHeaderUpdate) {
+    sheet.getRange(1, 1, 1, COLUMNS.length).setValues([COLUMNS]);
   }
   return sheet;
 }

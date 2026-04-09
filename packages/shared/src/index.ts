@@ -14,6 +14,8 @@ export interface InventoryItem {
   category?: string;
   /** 商品画像の URL（任意） */
   imageUrl?: string;
+  /** 在庫切れでも表示を維持するルーティーン管理品かどうか */
+  isRoutine?: boolean;
   name: string;
   quantity: number;
   /**

@@ -112,3 +112,10 @@
   text-align: center;
   text-decoration: none;
 }
+
+.item-routine-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}

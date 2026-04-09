@@ -33,6 +33,16 @@ function toOptionalString(v: unknown): string | undefined {
   return v;
 }
 
+function toOptionalBoolean(v: unknown): boolean | undefined {
+  if (v === null || v === undefined || v === "") return undefined;
+  if (typeof v === "boolean") return v;
+  if (typeof v === "string") {
+    if (v.toLowerCase() === "true") return true;
+    if (v.toLowerCase() === "false") return false;
+  }
+  return undefined;
+}
+
 function normalizeInventoryItem(raw: unknown): InventoryItem | null {
   if (!isInventoryItem(raw)) return null;
   return {
@@ -45,6 +55,7 @@ function normalizeInventoryItem(raw: unknown): InventoryItem | null {
     locationId: toOptionalString(raw.locationId),
     category: toOptionalString(raw.category),
     imageUrl: toOptionalString(raw.imageUrl),
+    isRoutine: toOptionalBoolean(raw.isRoutine),
     quantityCaption: toOptionalString(raw.quantityCaption),
     expiresAt: toOptionalString(raw.expiresAt),
     note: toOptionalString(raw.note),
