@@ -52,6 +52,31 @@
   opacity: 0.4;
 }
 
+.btn-icon__spinner {
+  animation: spin 0.9s linear infinite;
+}
+
+.page-header__status {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-icon__spinner {
+    animation: none;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .btn-text {
   border: none;
   background: none;

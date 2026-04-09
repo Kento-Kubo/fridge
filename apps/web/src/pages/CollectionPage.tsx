@@ -88,6 +88,7 @@ export default function CollectionPage() {
   const location = useLocation();
   const { items, movements, loading, error, refresh } = useInventory();
   const [flashMessage, setFlashMessage] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const msg = (location.state as { flashMessage?: string } | null)?.flashMessage;
@@ -126,6 +127,15 @@ export default function CollectionPage() {
     navigate("/login", { replace: true });
   };
 
+  const onRefreshClick = async () => {
+    setRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <>
       <header className="page-header">
@@ -138,14 +148,27 @@ export default function CollectionPage() {
             <button
               type="button"
               className="btn-icon"
-              onClick={() => refresh()}
-              aria-label="更新"
-              disabled={loading}
+              onClick={onRefreshClick}
+              aria-label={refreshing ? "更新中" : "更新"}
+              disabled={loading || refreshing}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <svg
+                className={refreshing ? "btn-icon__spinner" : undefined}
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden
+              >
                 <path d="M4 12a8 8 0 0 1 14.93-4H16a1 1 0 1 0 0 2h5a1 1 0 0 0 1-1V4a1 1 0 1 0-2 0v2.36A10 10 0 1 0 22 12a1 1 0 1 0-2 0 8 8 0 0 1-16 0Z" fill="currentColor"/>
               </svg>
             </button>
+            {refreshing ? (
+              <span className="page-header__status" role="status" aria-live="polite">
+                更新中…
+              </span>
+            ) : null}
             <button
               type="button"
               className="btn-text"
@@ -216,9 +239,6 @@ export default function CollectionPage() {
                       </p>
                     </div>
                     <p className="gallery-card__name">{item.name}</p>
-                    <p className="gallery-card__amount">
-                      {isRoutine ? `×${amount} / ルーティーン` : `×${amount}`}
-                    </p>
                     {buckets.length > 0 ? (
                       <ul className="gallery-card__stock-by-expiry">
                         {buckets.map((bucket) => (
