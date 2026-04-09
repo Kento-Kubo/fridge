@@ -96,6 +96,7 @@ function isInventoryMovement(x: unknown): x is InventoryMovement {
   ) {
     return false;
   }
+  if (o.expiresAt !== undefined && typeof o.expiresAt !== "string") return false;
   if (o.note !== undefined && typeof o.note !== "string") return false;
   return true;
 }

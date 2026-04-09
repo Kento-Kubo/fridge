@@ -11,11 +11,17 @@ type FormDefaults = {
   type: "in" | "out";
   quantity: string;
   occurredAt: string;
+  expiresAt: string;
   note: string;
 };
 
 function isoToDateInput(v?: string): string {
   if (!v) return new Date().toISOString().slice(0, 10);
+  return v.slice(0, 10);
+}
+
+function isoToOptionalDateInput(v?: string): string {
+  if (!v) return "";
   return v.slice(0, 10);
 }
 
@@ -30,6 +36,7 @@ function defaultsFromMovement(
       type: initialType,
       quantity: "1",
       occurredAt: isoToDateInput(),
+      expiresAt: "",
       note: "",
     };
   }
@@ -38,6 +45,7 @@ function defaultsFromMovement(
     type: movement.type,
     quantity: String(movement.quantity),
     occurredAt: isoToDateInput(movement.occurredAt),
+    expiresAt: movement.type === "in" ? isoToOptionalDateInput(movement.expiresAt) : "",
     note: movement.note ?? "",
   };
 }
@@ -61,6 +69,7 @@ export default function MovementDetailPage() {
   const [type, setType] = useState<"in" | "out">(defaults.type);
   const [quantity, setQuantity] = useState(defaults.quantity);
   const [occurredAt, setOccurredAt] = useState(defaults.occurredAt);
+  const [expiresAt, setExpiresAt] = useState(defaults.expiresAt);
   const [note, setNote] = useState(defaults.note);
 
   if (!movementId) return <Navigate to="/movements" replace />;
@@ -97,6 +106,7 @@ export default function MovementDetailPage() {
         type,
         quantity: qty,
         occurredAt: new Date(`${occurredAt}T00:00:00.000Z`).toISOString(),
+        expiresAt: type === "in" && expiresAt ? expiresAt : undefined,
         note: note.trim() || undefined,
       });
       await refresh();
@@ -158,6 +168,18 @@ export default function MovementDetailPage() {
                 <option value="out">出庫</option>
               </select>
             </label>
+            {type === "in" ? (
+              <label className="field">
+                <span className="label">賞味期限（任意）</span>
+                <input
+                  className="input"
+                  type="date"
+                  value={expiresAt}
+                  onChange={(e) => setExpiresAt(e.target.value)}
+                  disabled={isBusy}
+                />
+              </label>
+            ) : null}
             <label className="field">
               <span className="label">数量</span>
               <input
