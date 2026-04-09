@@ -40,6 +40,7 @@ export default function TransactionPage() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fridgeItemNames = Array.from(new Set(items.map((i) => i.name).filter(Boolean))).sort(
     (a, b) => a.localeCompare(b, "ja")
@@ -84,6 +85,15 @@ export default function TransactionPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <>
       <header className="page-header">
@@ -96,14 +106,27 @@ export default function TransactionPage() {
             <button
               type="button"
               className="btn-icon"
-              onClick={() => refresh()}
-              aria-label="更新"
-              disabled={loading}
+              onClick={handleRefresh}
+              aria-label={refreshing ? "更新中" : "更新"}
+              disabled={loading || refreshing}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <svg
+                className={refreshing ? "btn-icon__spinner" : undefined}
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden
+              >
                 <path d="M4 12a8 8 0 0 1 14.93-4H16a1 1 0 1 0 0 2h5a1 1 0 0 0 1-1V4a1 1 0 1 0-2 0v2.36A10 10 0 1 0 22 12a1 1 0 1 0-2 0 8 8 0 0 1-16 0Z" fill="currentColor"/>
               </svg>
             </button>
+            {refreshing ? (
+              <span className="page-header__status" role="status" aria-live="polite">
+                更新中…
+              </span>
+            ) : null}
           </div>
         </div>
       </header>
