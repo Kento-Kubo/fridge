@@ -204,7 +204,7 @@ export default function CollectionPage() {
             <section>
               <h2 className="stock-section-title">在庫あり</h2>
               <ul className="gallery-grid">
-                {activeItems.map(({ item, amount, buckets, isRoutine }) => (
+                {activeItems.map(({ item, buckets }) => (
                   <li key={item.id} className="gallery-grid__cell">
                     <Link className="gallery-card" to={`/items/${item.id}`}>
                   <div className="gallery-card__media">
